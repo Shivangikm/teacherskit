@@ -27,7 +27,7 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-const WEBHOOK_URL = "https://shivangi.app.n8n.cloud/webhook-test/lesson-kit";
+const WEBHOOK_URL = "https://shivangi.app.n8n.cloud/webhook/lesson-kit";
 
 type LessonKit = {
   lesson_plan: {
