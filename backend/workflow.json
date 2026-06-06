@@ -1,0 +1,315 @@
+{
+  "name": "AI teaching studio",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lesson-kit",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -576,
+        -320
+      ],
+      "id": "41d8c73f-896c-4aee-81c7-fcb36b88df94",
+      "name": "Webhook",
+      "webhookId": "2bba206f-f508-40bf-bb48-e2914e116ea4"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an expert lesson planner. Return ONLY valid JSON, no markdown, no backticks.\n\nCreate a lesson plan for:\nSubject: {{ $('Webhook').item.json.body.subject }}\nGrade: {{ $('Webhook').item.json.body.grade }}\nTopic: {{ $('Webhook').item.json.body.topic }}\nDuration: {{ $('Webhook').item.json.body.duration }}\nObjectives: {{ $('Webhook').item.json.body.objectives }}\nLanguage: {{ $('Webhook').item.json.body.language }}\n\nOutput exactly this JSON shape:\n{\"warmup\":\"...\",\"concepts\":[\"...\"],\"activity\":\"...\",\"recap\":\"...\",\"homework\":\"...\"}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -352,
+        -320
+      ],
+      "id": "d903ecbd-be7c-4995-86a5-d3dfb75503dc",
+      "name": "AI Agent",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a worksheet generator. Return ONLY valid JSON, no markdown, no backticks.\n\nSubject: {{ $('Webhook').item.json.body.subject }}\nGrade: {{ $('Webhook').item.json.body.grade }}\nTopic: {{ $('Webhook').item.json.body.topic }}\nLanguage: {{ $('Webhook').item.json.body.language }}\n\nCreate a worksheet ABOUT THIS EXACT TOPIC with multiple difficulty levels (easy, medium, hard). All questions must relate directly to the topic above.\n\nOutput exactly this JSON shape:\n{\"easy\":[\"...\"],\"medium\":[\"...\"],\"hard\":[\"...\"]}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        0,
+        -320
+      ],
+      "id": "f9fe51ce-85b2-4a7d-b174-c97472295519",
+      "name": "AI Agent1",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "maxTries": 5
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a quiz generator with auto-grading. Return ONLY valid JSON, no markdown, no backticks.\n\nSubject: {{ $('Webhook').item.json.body.subject }}\nGrade: {{ $('Webhook').item.json.body.grade }}\nTopic: {{ $('Webhook').item.json.body.topic }}\nLanguage: {{ $('Webhook').item.json.body.language }}\n\nCreate a quiz ABOUT THIS EXACT TOPIC: MCQs and short-answer questions with an answer key and grading rubric. Every question must relate directly to the topic above.\n\nOutput exactly this JSON shape:\n{\"mcqs\":[{\"q\":\"\",\"options\":[\"\",\"\",\"\",\"\"],\"answer\":\"\"}],\"short_answers\":[{\"q\":\"\",\"model_answer\":\"\"}],\"rubric\":\"...\"}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        352,
+        -320
+      ],
+      "id": "9f4fff70-5f97-4859-be50-da1e843c80cd",
+      "name": "AI Agent2",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"lesson_plan\": JSON.parse($('AI Agent').item.json.output), \"worksheet\": JSON.parse($('AI Agent1').item.json.output), \"quiz\": JSON.parse($('AI Agent2').item.json.output) } }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        672,
+        64
+      ],
+      "id": "6aa2bf71-12a4-4589-b223-83e52bc47d12",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash",
+        "options": {
+          "maxOutputTokens": 4096
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -352,
+        -112
+      ],
+      "id": "14ad8467-c8aa-4624-a69d-5885264eeaef",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "cc4PMtsEG6JW7auL",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash",
+        "options": {
+          "maxOutputTokens": 4096
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        -112
+      ],
+      "id": "11e68275-8035-4312-a128-e948af47c4c9",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "cc4PMtsEG6JW7auL",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash",
+        "options": {
+          "maxOutputTokens": 4096
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        352,
+        -112
+      ],
+      "id": "8093cf66-683a-4e61-a7e8-9c50cf35ea0d",
+      "name": "Google Gemini Chat Model2",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "cc4PMtsEG6JW7auL",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "lessons",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "subject",
+              "fieldValue": "={{ $('Webhook').item.json.body.subject}}"
+            },
+            {
+              "fieldId": "topic",
+              "fieldValue": "={{ $('Webhook').item.json.body.topic }}"
+            },
+            {
+              "fieldId": "duration",
+              "fieldValue": "={{ $('Webhook').item.json.body.duration }}"
+            },
+            {
+              "fieldId": "objectives",
+              "fieldValue": "={{ $('Webhook').item.json.body.objectives }}"
+            },
+            {
+              "fieldId": "language",
+              "fieldValue": "= {{ $('Webhook').item.json.body.language }}"
+            },
+            {
+              "fieldId": "lesson_plan",
+              "fieldValue": "= {{ $('AI Agent').item.json.output }}"
+            },
+            {
+              "fieldId": "quiz",
+              "fieldValue": "={{ $('AI Agent2').item.json.output }}"
+            },
+            {
+              "fieldId": "worksheet",
+              "fieldValue": "={{ $('AI Agent1').item.json.output }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        848,
+        -176
+      ],
+      "id": "c1ffce8d-e019-461a-baeb-9d40b57ae4db",
+      "name": "Create a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "Vj0P4ptdSurBWPVc",
+          "name": "Supabase account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent2": {
+      "main": [
+        [
+          {
+            "node": "Create a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a row": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "fad37ebc-5675-41cc-9cbf-c6d0acaaba66",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "2a86bbca3955da4b91cdf3e6fc93a9f312429ecf4964eac2ef28f2da663d31b3"
+  },
+  "id": "uB5UbKxlFb1jD57r",
+  "tags": []
+}
